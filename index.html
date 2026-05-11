@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AM I COOKED?</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&family=Comic+Neue:wght@700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0f1e;
+      color: #e0e0e0;
+      font-family: 'Comic Neue', 'Comic Sans MS', cursive;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scanline overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.15) 2px,
+        rgba(0,0,0,0.15) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* Background glow */
+    .bg-glow {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(0,204,102,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(0,150,200,0.08) 0%, transparent 40%),
+        radial-gradient(ellipse at 20% 90%, rgba(50,100,220,0.06) 0%, transparent 40%);
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Warning banner */
+    .warning-banner {
+      background: repeating-linear-gradient(
+        45deg,
+        #00cc66,
+        #00cc66 10px,
+        #00aa55 10px,
+        #00aa55 20px
+      );
+      color: white;
+      text-align: center;
+      padding: 8px;
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      animation: banner-scroll 10s linear infinite;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    @keyframes banner-scroll {
+      0% { background-position: 0 0; }
+      100% { background-position: 200px 0; }
+    }
+
+    /* System status bar */
+    .status-bar {
+      background: #0d1a2e;
+      border: 1px solid #1a2a44;
+      border-top: 1px solid #2a3a55;
+      padding: 6px 12px;
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      color: #33cc99;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2px;
+    }
+
+    .status-bar .blink {
+      animation: blink 1s step-end infinite;
+      color: #00cc66;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 60px 20px 40px;
+    }
+
+    .hero h1 {
+      font-size: clamp(3rem, 10vw, 6rem);
+      color: #00cc66;
+      text-shadow:
+        0 0 20px rgba(0,204,102,0.5),
+        0 0 40px rgba(0,204,102,0.3),
+        0 0 80px rgba(0,204,102,0.1),
+        3px 3px 0 #000;
+      line-height: 1;
+      margin-bottom: 10px;
+      animation: hero-pulse 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes hero-pulse {
+      from { text-shadow: 0 0 20px rgba(0,204,102,0.5), 0 0 40px rgba(0,204,102,0.3), 3px 3px 0 #000; }
+      to { text-shadow: 0 0 30px rgba(0,204,102,0.8), 0 0 60px rgba(0,204,102,0.5), 0 0 100px rgba(0,204,102,0.2), 3px 3px 0 #000; }
+    }
+
+    .hero .subtitle {
+      font-family: 'VT323', monospace;
+      font-size: 22px;
+      color: #0984e3;
+      margin-bottom: 8px;
+    }
+
+    .hero .tagline {
+      font-size: 18px;
+      color: #888;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* Error popup style */
+    .error-decoration {
+      display: inline-block;
+      background: #0d1a2e;
+      border: 2px solid #00cc66;
+      border-radius: 4px;
+      padding: 12px 20px;
+      margin: 25px auto 0;
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      color: #66ddaa;
+      text-align: left;
+      box-shadow: 0 0 15px rgba(0,204,102,0.2), inset 0 0 30px rgba(0,204,102,0.03);
+    }
+
+    .error-decoration::before {
+      content: '// SYSTEM WARNING';
+      display: block;
+      color: #00cc66;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    /* Submission form */
+    .submit-section {
+      background: #0d1a2e;
+      border: 2px solid #1a2a44;
+      border-top: 1px solid #2a3a55;
+      border-left: 1px solid #2a3a55;
+      border-radius: 8px;
+      padding: 30px;
+      margin: 40px 0;
+      position: relative;
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+    }
+
+    .submit-section::before {
+      content: 'INCIDENT REPORT FORM';
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: #00cc66;
+      color: white;
+      padding: 2px 12px;
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      letter-spacing: 2px;
+    }
+
+    .submit-section h2 {
+      font-size: 28px;
+      color: #0984e3;
+      margin-bottom: 5px;
+    }
+
+    .submit-section .form-desc {
+      color: #777;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      color: #33cc99;
+      margin-bottom: 6px;
+    }
+
+    .form-group label::before {
+      content: '> ';
+      color: #555;
+    }
+
+    .form-helper {
+      display: block;
+      font-family: 'VT323', monospace;
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    textarea, select, input[type="text"] {
+      width: 100%;
+      background: #060d1a;
+      border: 2px inset #1a2a44;
+      color: #e0e0e0;
+      padding: 12px;
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      border-radius: 4px;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus, select:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: #0984e3;
+      box-shadow: 0 0 10px rgba(9,132,227,0.2);
+    }
+
+    textarea {
+      min-height: 120px;
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230984e3' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+
+    select option {
+      background: #0d1a2e;
+      color: #e0e0e0;
+    }
+
+    .submit-btn {
+      background: linear-gradient(180deg, #00dd77 0%, #00cc66 40%, #00aa55 100%);
+      color: white;
+      border: 2px outset #00ee88;
+      padding: 14px 32px;
+      font-family: 'Comic Neue', 'Comic Sans MS', cursive;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 4px;
+      width: 100%;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .submit-btn:hover {
+      background: linear-gradient(180deg, #00ee88 0%, #00dd77 40%, #00bb66 100%);
+      transform: scale(1.02);
+      box-shadow: 0 0 25px rgba(0,204,102,0.4);
+    }
+
+    .submit-btn:active {
+      transform: scale(0.98);
+      border-style: inset;
+    }
+
+    /* Verdict display */
+    .verdict-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(5,10,25,0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      animation: fade-in 0.3s;
+    }
+
+    .verdict-overlay.active {
+      display: flex;
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .verdict-card {
+      background: #0d1a2e;
+      border: 3px solid #00cc66;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      animation: slam 0.4s cubic-bezier(0.17, 0.67, 0.29, 1.3);
+      position: relative;
+    }
+
+    @keyframes slam {
+      0% { transform: scale(0.3) rotate(-5deg); opacity: 0; }
+      70% { transform: scale(1.05) rotate(1deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .verdict-stamp {
+      font-size: 48px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 10px 20px;
+      border: 4px solid;
+      display: inline-block;
+      transform: rotate(-5deg);
+      margin-bottom: 15px;
+    }
+
+    .verdict-message {
+      font-family: 'VT323', monospace;
+      font-size: 20px;
+      color: #aaa;
+      margin-bottom: 20px;
+    }
+
+    .verdict-close {
+      background: none;
+      border: 1px solid #555;
+      color: #888;
+      padding: 8px 24px;
+      cursor: pointer;
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .verdict-close:hover {
+      border-color: #0984e3;
+      color: #0984e3;
+    }
+
+    /* Recent cases */
+    .cases-section {
+      margin: 40px 0;
+    }
+
+    .cases-section h2 {
+      font-size: 24px;
+      color: #0984e3;
+      margin-bottom: 5px;
+    }
+
+    .cases-section .section-sub {
+      font-family: 'VT323', monospace;
+      color: #555;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .case-card {
+      background: #0d1a2e;
+      border: 1px solid #1a2a44;
+      border-left: 4px solid;
+      border-radius: 4px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .case-card:hover {
+      background: #112240;
+      border-color: #2a3a55;
+    }
+
+    .case-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .case-category {
+      font-family: 'VT323', monospace;
+      font-size: 14px;
+      color: #888;
+    }
+
+    .case-twitter {
+      color: #0984e3;
+      margin-left: 8px;
+    }
+
+    .case-verdict {
+      font-family: 'VT323', monospace;
+      font-size: 14px;
+      padding: 2px 10px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .case-text {
+      font-size: 16px;
+      line-height: 1.5;
+      color: #ccc;
+    }
+
+    .case-footer {
+      margin-top: 10px;
+      display: flex;
+      gap: 16px;
+      font-family: 'VT323', monospace;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .vote-btn {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      font-family: 'VT323', monospace;
+      font-size: 14px;
+      padding: 2px 6px;
+      transition: color 0.2s;
+    }
+
+    .vote-btn:hover { color: #0984e3; }
+
+    /* Verdict colors */
+    .verdict-not-cooked { color: #00cc66; border-color: #00cc66; }
+    .verdict-lightly-toasted { color: #33cc99; border-color: #33cc99; }
+    .verdict-concerning { color: #0984e3; border-color: #0984e3; }
+    .verdict-deeply-cooked { color: #6c5ce7; border-color: #6c5ce7; }
+    .verdict-unrecoverable { color: #a855f7; border-color: #a855f7; background: rgba(168,85,247,0.1); }
+    .verdict-somehow-iconic { color: #fd79a8; border-color: #fd79a8; }
+
+    /* Cook meter */
+    .cook-meter {
+      margin: 40px 0;
+      text-align: center;
+    }
+
+    .cook-meter h2 {
+      font-size: 24px;
+      color: #0984e3;
+      margin-bottom: 15px;
+    }
+
+    .meter-bar {
+      height: 40px;
+      background: #0d1a2e;
+      border: 2px solid #1a2a44;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .meter-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00cc66 0%, #33cc99 30%, #0984e3 50%, #6c5ce7 75%, #a855f7 100%);
+      width: 0%;
+      transition: width 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      border-radius: 20px;
+      position: relative;
+    }
+
+    .meter-fill::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      background: white;
+      border-radius: 3px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+
+    .meter-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-family: 'VT323', monospace;
+      font-size: 14px;
+    }
+
+    .meter-labels span:first-child { color: #00cc66; }
+    .meter-labels span:nth-child(2) { color: #33cc99; }
+    .meter-labels span:nth-child(3) { color: #0984e3; }
+    .meter-labels span:nth-child(4) { color: #6c5ce7; }
+    .meter-labels span:last-child { color: #a855f7; }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      font-family: 'VT323', monospace;
+      color: #333;
+      font-size: 16px;
+      border-top: 1px solid #1a2a44;
+      margin-top: 40px;
+    }
+
+    footer .footer-warning {
+      color: #00cc66;
+      margin-bottom: 5px;
+    }
+
+    /* Starfield bg pattern */
+    .toast-pattern {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      opacity: 0.6;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4) 50%, transparent 50%),
+        radial-gradient(1px 1px at 30% 65%, rgba(255,255,255,0.3) 50%, transparent 50%),
+        radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.5) 50%, transparent 50%),
+        radial-gradient(1px 1px at 70% 45%, rgba(255,255,255,0.3) 50%, transparent 50%),
+        radial-gradient(1px 1px at 85% 80%, rgba(255,255,255,0.4) 50%, transparent 50%),
+        radial-gradient(1px 1px at 45% 90%, rgba(255,255,255,0.2) 50%, transparent 50%),
+        radial-gradient(1px 1px at 20% 50%, rgba(255,255,255,0.3) 50%, transparent 50%),
+        radial-gradient(1px 1px at 90% 25%, rgba(255,255,255,0.4) 50%, transparent 50%),
+        radial-gradient(2px 2px at 60% 70%, rgba(0,204,102,0.3) 50%, transparent 50%),
+        radial-gradient(2px 2px at 25% 35%, rgba(9,132,227,0.3) 50%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Floating emojis */
+    .floating-emoji {
+      position: fixed;
+      font-size: 24px;
+      pointer-events: none;
+      z-index: 998;
+      animation: float-up 4s ease-out forwards;
+      opacity: 0;
+    }
+
+    @keyframes float-up {
+      0% { opacity: 0; transform: translateY(0) rotate(0deg); }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.3; }
+      100% { opacity: 0; transform: translateY(-300px) rotate(30deg); }
+    }
+
+    /* Glitch effect on hover */
+    .glitch:hover {
+      animation: glitch 0.3s steps(2) infinite;
+    }
+
+    @keyframes glitch {
+      0% { text-shadow: 2px 0 #0984e3, -2px 0 #00cc66; }
+      50% { text-shadow: -2px 0 #0984e3, 2px 0 #00cc66; }
+      100% { text-shadow: 2px 0 #0984e3, -2px 0 #00cc66; }
+    }
+
+    /* Loading state */
+    .loading .submit-btn {
+      background: #666;
+      pointer-events: none;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 600px) {
+      .container { padding: 10px; }
+      .hero { padding: 40px 10px 30px; }
+      .submit-section { padding: 20px 15px; }
+      .case-header { flex-direction: column; align-items: flex-start; gap: 5px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toast-pattern"></div>
+  <div class="bg-glow"></div>
+
+  <div class="warning-banner">
+    <marquee scrollamount="4">&#9733; CRITICAL LIFE ERROR DETECTED &#9733; USER STATUS: UNDER REVIEW &#9733; COOKED LEVEL: CALCULATING... &#9733; SUBMIT YOUR CASE NOW &#9733; ALL VERDICTS ARE FINAL &#9733; CRITICAL LIFE ERROR DETECTED &#9733;</marquee>
+  </div>
+
+  <div class="status-bar">
+    <span>SYSTEM: life_audit.exe</span>
+    <span>CASES FILED: <span id="case-count">2,847</span></span>
+    <span class="blink">&#9679; LIVE</span>
+  </div>
+
+  <div class="container">
+    <header class="hero">
+      <h1 class="glitch">AM I COOKED?</h1>
+      <p class="subtitle">submit your situation. chat decides your fate.</p>
+      <p class="tagline">anonymous disaster intake form for when you need the internet to confirm what you already know</p>
+      <div class="error-decoration">
+        life.exe has encountered a critical error<br>
+        user action may have consequences<br>
+        social recovery: unknown
+      </div>
+    </header>
+
+    <!-- Cook Meter -->
+    <div class="cook-meter">
+      <h2>GLOBAL COOK METER</h2>
+      <div class="meter-bar">
+        <div class="meter-fill" id="global-meter"></div>
+      </div>
+      <div class="meter-labels">
+        <span>raw</span>
+        <span>toasted</span>
+        <span>concerning</span>
+        <span>cooked</span>
+        <span>ash</span>
+      </div>
+    </div>
+
+    <!-- Submit Form -->
+    <div class="submit-section" id="submit-form">
+      <h2>describe the incident below</h2>
+      <p class="form-desc">keep it short, weird, and real. all submissions are anonymous.</p>
+
+      <div class="form-group">
+        <label>category</label>
+        <select id="category">
+          <option value="">select your disaster type...</option>
+          <option value="work">work / career</option>
+          <option value="relationship">relationship / situationship</option>
+          <option value="social">social / reputation</option>
+          <option value="financial">financial</option>
+          <option value="academic">school / academic</option>
+          <option value="tech">tech / startup</option>
+          <option value="existential">existential crisis</option>
+          <option value="other">other (somehow worse)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>what happened</label>
+        <textarea id="story" placeholder="i accidentally replied-all to 500 people with a meme about my boss..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>twitter (optional)</label>
+        <span class="form-helper">add your @ so we can roast/support you in real time</span>
+        <input type="text" id="twitter-handle" placeholder="@yourhandle">
+      </div>
+
+      <button class="submit-btn" onclick="submitCase()">SUBMIT YOUR CASE</button>
+    </div>
+
+    <!-- Recent Cases -->
+    <div class="cases-section">
+      <h2>recent cases</h2>
+      <p class="section-sub">// latest incidents under review</p>
+
+      <div id="cases-list">
+        <div class="case-card" style="border-left-color: #a855f7;">
+          <div class="case-header">
+            <span class="case-category">tech / startup</span>
+            <span class="case-verdict verdict-unrecoverable">UNRECOVERABLE</span>
+          </div>
+          <p class="case-text">pushed to prod on friday at 4:59pm, brought down the entire payment system, CEO was on a live demo with investors. i am mass-updating my linkedin right now</p>
+          <div class="case-footer">
+            <button class="vote-btn" onclick="vote(this, 'cooked')">&#128293; cooked (847)</button>
+            <button class="vote-btn" onclick="vote(this, 'not')">&#129782; not cooked (12)</button>
+            <span>2 min ago</span>
+          </div>
+        </div>
+
+        <div class="case-card" style="border-left-color: #6c5ce7;">
+          <div class="case-header">
+            <span class="case-category">relationship</span>
+            <span class="case-verdict verdict-deeply-cooked">DEEPLY COOKED</span>
+          </div>
+          <p class="case-text">liked my ex's instagram photo from 2019 at 3am. it was a couples photo. with their current partner. they saw the notification before i could unlike it.</p>
+          <div class="case-footer">
+            <button class="vote-btn" onclick="vote(this, 'cooked')">&#128293; cooked (634)</button>
+            <button class="vote-btn" onclick="vote(this, 'not')">&#129782; not cooked (89)</button>
+            <span>8 min ago</span>
+          </div>
+        </div>
+
+        <div class="case-card" style="border-left-color: #33cc99;">
+          <div class="case-header">
+            <span class="case-category">social</span>
+            <span class="case-verdict verdict-lightly-toasted">LIGHTLY TOASTED</span>
+          </div>
+          <p class="case-text">waved back at someone who was waving at the person behind me. then they pointed out i had toilet paper on my shoe. this was at a networking event.</p>
+          <div class="case-footer">
+            <button class="vote-btn" onclick="vote(this, 'cooked')">&#128293; cooked (201)</button>
+            <button class="vote-btn" onclick="vote(this, 'not')">&#129782; not cooked (340)</button>
+            <span>15 min ago</span>
+          </div>
+        </div>
+
+        <div class="case-card" style="border-left-color: #fd79a8;">
+          <div class="case-header">
+            <span class="case-category">work / career</span>
+            <span class="case-verdict verdict-somehow-iconic">SOMEHOW ICONIC</span>
+          </div>
+          <p class="case-text">accidentally screen-shared my spotify wrapped during the all-hands meeting. my most played song was "i hate my job" by the midnight. got promoted a week later???</p>
+          <div class="case-footer">
+            <button class="vote-btn" onclick="vote(this, 'cooked')">&#128293; cooked (156)</button>
+            <button class="vote-btn" onclick="vote(this, 'not')">&#129782; not cooked (892)</button>
+            <span>23 min ago</span>
+          </div>
+        </div>
+
+        <div class="case-card" style="border-left-color: #6c5ce7;">
+          <div class="case-header">
+            <span class="case-category">financial</span>
+            <span class="case-verdict verdict-deeply-cooked">DEEPLY COOKED</span>
+          </div>
+          <p class="case-text">put my entire emergency fund into a crypto coin because a guy on twitter with a laser eyes pfp said it was "going to mars." it went to zero. in 4 hours.</p>
+          <div class="case-footer">
+            <button class="vote-btn" onclick="vote(this, 'cooked')">&#128293; cooked (1.2k)</button>
+            <button class="vote-btn" onclick="vote(this, 'not')">&#129782; not cooked (23)</button>
+            <span>31 min ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p class="footer-warning">&#9888; no real humans were harmed in the making of this site (probably) &#9888;</p>
+    <p>am-i-cooked.exe v0.0.1 // all verdicts are final // no appeals</p>
+  </footer>
+
+  <!-- Verdict overlay -->
+  <div class="verdict-overlay" id="verdict-overlay" onclick="closeVerdict(event)">
+    <div class="verdict-card" onclick="event.stopPropagation()">
+      <div class="verdict-stamp" id="verdict-stamp"></div>
+      <p class="verdict-message" id="verdict-message"></p>
+      <button class="verdict-close" onclick="closeVerdict()">[ dismiss ]</button>
+    </div>
+  </div>
+
+  <script>
+    // Animate global meter on load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('global-meter').style.width = '72%';
+      }, 500);
+    });
+
+    // Verdicts with weights
+    const verdicts = [
+      { label: 'NOT COOKED', class: 'verdict-not-cooked', messages: [
+        'you\'re fine. go outside.',
+        'this is a non-issue. touch grass.',
+        'the council has reviewed your case and found no evidence of cookedness.',
+      ]},
+      { label: 'LIGHTLY TOASTED', class: 'verdict-lightly-toasted', messages: [
+        'you\'ll recover, but it\'ll be awkward for a while.',
+        'minor damage detected. self-repair possible.',
+        'survivable. barely. don\'t do it again.',
+      ]},
+      { label: 'CONCERNING', class: 'verdict-concerning', messages: [
+        'this is... not great. monitor the situation.',
+        'warning signs detected. proceed with extreme caution.',
+        'the damage is real but not yet permanent.',
+      ]},
+      { label: 'DEEPLY COOKED', class: 'verdict-deeply-cooked', messages: [
+        'reputation damage: significant. recovery timeline: unclear.',
+        'you are, in fact, cooked. our condolences.',
+        'this one\'s going in the group chat.',
+      ]},
+      { label: 'UNRECOVERABLE', class: 'verdict-unrecoverable', messages: [
+        'there is no coming back from this. godspeed.',
+        'CRITICAL FAILURE. user is beyond saving.',
+        'pack it up. start over. new city, new name.',
+      ]},
+      { label: 'SOMEHOW ICONIC', class: 'verdict-somehow-iconic', messages: [
+        'wait... this is actually legendary?',
+        'cooked but in a way that might go viral.',
+        'the council is confused but impressed.',
+      ]},
+    ];
+
+    function submitCase() {
+      const story = document.getElementById('story').value.trim();
+      const category = document.getElementById('category').value;
+      const twitter = document.getElementById('twitter-handle').value.trim();
+
+      if (!story) {
+        document.getElementById('story').style.borderColor = '#0984e3';
+        document.getElementById('story').setAttribute('placeholder', 'you have to actually tell us what happened...');
+        return;
+      }
+
+      // Pick a verdict (weighted toward the middle/cooked end)
+      const weights = [0.08, 0.15, 0.22, 0.28, 0.17, 0.10];
+      let random = Math.random();
+      let verdictIndex = 0;
+      for (let i = 0; i < weights.length; i++) {
+        random -= weights[i];
+        if (random <= 0) { verdictIndex = i; break; }
+      }
+
+      const verdict = verdicts[verdictIndex];
+      const message = verdict.messages[Math.floor(Math.random() * verdict.messages.length)];
+
+      // Show verdict
+      const stamp = document.getElementById('verdict-stamp');
+      stamp.textContent = verdict.label;
+      stamp.className = 'verdict-stamp ' + verdict.class;
+
+      document.getElementById('verdict-message').textContent = message;
+      document.getElementById('verdict-overlay').classList.add('active');
+
+      // Spawn floating emojis
+      const emojis = ['\u{1F525}', '\u{1F35E}', '\u{1F605}', '\u{1F480}', '\u{1F976}', '\u{2728}', '\u{1F62D}', '\u{1F451}'];
+      for (let i = 0; i < 8; i++) {
+        setTimeout(() => spawnEmoji(emojis[Math.floor(Math.random() * emojis.length)]), i * 150);
+      }
+
+      // Add to cases list
+      addCase(story, category, verdict, twitter);
+
+      // Reset form
+      document.getElementById('story').value = '';
+      document.getElementById('category').selectedIndex = 0;
+      document.getElementById('twitter-handle').value = '';
+    }
+
+    function addCase(text, category, verdict, twitter) {
+      const list = document.getElementById('cases-list');
+      const categoryLabels = {
+        'work': 'work / career', 'relationship': 'relationship', 'social': 'social',
+        'financial': 'financial', 'academic': 'academic', 'tech': 'tech / startup',
+        'existential': 'existential crisis', 'other': 'other', '': 'unclassified'
+      };
+
+      const borderColors = {
+        'verdict-not-cooked': '#00cc66',
+        'verdict-lightly-toasted': '#33cc99',
+        'verdict-concerning': '#0984e3',
+        'verdict-deeply-cooked': '#6c5ce7',
+        'verdict-unrecoverable': '#a855f7',
+        'verdict-somehow-iconic': '#fd79a8',
+      };
+
+      const card = document.createElement('div');
+      card.className = 'case-card';
+      card.style.borderLeftColor = borderColors[verdict.class];
+      const handle = twitter ? escapeHtml(twitter.replace(/^@/, '')) : '';
+      const twitterHtml = handle ? `<span class="case-twitter">@${handle}</span>` : '';
+      card.innerHTML = `
+        <div class="case-header">
+          <span class="case-category">${categoryLabels[category]} ${twitterHtml}</span>
+          <span class="case-verdict ${verdict.class}">${verdict.label}</span>
+        </div>
+        <p class="case-text">${escapeHtml(text)}</p>
+        <div class="case-footer">
+          <button class="vote-btn" onclick="vote(this, 'cooked')">&#128293; cooked (0)</button>
+          <button class="vote-btn" onclick="vote(this, 'not')">&#129782; not cooked (0)</button>
+          <span>just now</span>
+        </div>
+      `;
+      list.insertBefore(card, list.firstChild);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function closeVerdict(e) {
+      if (e && e.target && !e.target.classList.contains('verdict-overlay') && e.target !== document.getElementById('verdict-overlay')) return;
+      document.getElementById('verdict-overlay').classList.remove('active');
+    }
+
+    function vote(btn, type) {
+      const match = btn.textContent.match(/\(([^)]+)\)/);
+      if (match) {
+        let count = match[1].includes('k') ? parseFloat(match[1]) * 1000 : parseInt(match[1].replace(',', ''));
+        count++;
+        const display = count >= 1000 ? (count / 1000).toFixed(1) + 'k' : count.toLocaleString();
+        const emoji = type === 'cooked' ? '\u{1F525}' : '\u{1F976}';
+        const label = type === 'cooked' ? 'cooked' : 'not cooked';
+        btn.textContent = `${emoji} ${label} (${display})`;
+        btn.style.color = type === 'cooked' ? '#0984e3' : '#00cc66';
+      }
+    }
+
+    function spawnEmoji(emoji) {
+      const el = document.createElement('div');
+      el.className = 'floating-emoji';
+      el.textContent = emoji;
+      el.style.left = (Math.random() * 80 + 10) + '%';
+      el.style.top = (Math.random() * 40 + 40) + '%';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    // Random case counter increment
+    setInterval(() => {
+      const counter = document.getElementById('case-count');
+      let val = parseInt(counter.textContent.replace(',', ''));
+      val += Math.floor(Math.random() * 3);
+      counter.textContent = val.toLocaleString();
+    }, 3000);
+  </script>
+</body>
+</html>
